@@ -6,6 +6,7 @@ public class Process extends Thread{
 	private Semaphore allDone;
 	private String identificador;
 	private int contador;
+	private int orden;
 	
 	public Process(){
 		this.identificador = "";
