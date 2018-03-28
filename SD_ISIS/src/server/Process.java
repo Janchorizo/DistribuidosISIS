@@ -10,16 +10,19 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
 
 public class Process extends Thread{
-	private ArrayList<String[]> processList;
+	private ArrayList<String[]> procesos;
 	private Semaphore allDone;
 	private String id;
 	private int contador;
 	private int orden;
 	
-	public Process( String id, ArrayList<String[]>processList){
+	public Process( String id){
 		this.id = id;
-		this.processList = new ArrayList<String[]>( processList);
 		this.contador = 0;
+	}
+	
+	public void putProcesos( ArrayList<String[]> procesos){
+		this.procesos = procesos;
 	}
 	
 	public void run(){
