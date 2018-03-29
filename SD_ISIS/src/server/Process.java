@@ -21,7 +21,7 @@ public class Process extends Thread{
 	
 	public Process( String id){
 		this.id = id;
-		this.contador = 0;
+		this.orden = 0;
 	}
 	
 	public void putProcesos( ArrayList<ProcessDir> dirProcesos){
@@ -47,6 +47,7 @@ public class Process extends Thread{
 	
 	public int recibirMensaje( mensajes.Mensaje msg){
 		int err = 0;
+		this.orden = Math.max(this.orden, msg.orden) + 1;
 		
 		System.out.println("Proceso " + this.id + "\n" +
 				"Recibido " + msg.id + " de " + msg.emisor + "\n" +
@@ -58,6 +59,7 @@ public class Process extends Thread{
 	
 	public int recibirPropuesta( mensajes.Propuesta msg){
 		int err = 0;
+		this.orden = Math.max(this.orden, msg.orden) + 1;
 		
 		System.out.println("Proceso " + this.id + "\n" +
 			"Recibido " + msg.id + " de " + msg.emisor + "\n" +
@@ -69,6 +71,7 @@ public class Process extends Thread{
 	
 	public int recibirAcuerdo( mensajes.Acuerdo msg){
 		int err = 0;
+		this.orden = Math.max(this.orden, msg.orden) + 1;
 		
 		System.out.println("Proceso " + this.id + "\n" +
 			"Recibido " + msg.id + " de " + msg.emisor + "\n" +

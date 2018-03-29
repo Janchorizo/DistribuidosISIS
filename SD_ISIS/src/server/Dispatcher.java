@@ -15,6 +15,23 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+
+/**
+ * Despachador para el sistema distribuido
+ * <br><br>
+ * Cada instancia tiene asociados unos procesos a los que enruta los mensajes que 
+ * tengan como destino el mismo.
+ * Los mensajes llegan a través de una api REST expuesta, que utiliza argumentos en
+ * forma de documento JSON para transimitir el contenido.
+ * <br>
+ * Cada instancia se encarga de mantener actualizado un directorio con el resto de los
+ * despachadores en la red local, y los procesos que tienen cada uno.
+ * <br>
+ * Ruta : /dispatcher
+ * 
+ * @author alex
+ * @see Process
+ */
 @Path("/dispatcher")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -41,6 +58,15 @@ public class Dispatcher {
 		}
 	}
 	
+	/**
+	 * Enruta el mensaje 'msg' al proceso 'process', siendo el proceso local
+	 * al objeto Dispatcher
+	 * {@literal} Path : mandarMensaje 
+	 * @see Dispatcher
+	 * @see mensajes.Mensaje
+	 * @param proceso Identificador del proceso local
+	 * @param msg Mensaje a enrutar
+	 */
 	@PUT
 	@Path("mandarMensaje")
 	public void mandarMensaje(@QueryParam("proceso") String proceso, mensajes.Mensaje msg){
@@ -48,6 +74,14 @@ public class Dispatcher {
 		this.procesosLocales.get(proceso).recibirMensaje( msg);
 	}
 	
+	/**
+	 * Enruta la propuesta de orden 'msg' al proceso 'process', siendo el proceso
+	 * local al objeto Dispatcher
+	 * @see Dispatcher
+	 * @see mensajes.Propuesta
+	 * @param proceso Identificador del proceso local
+	 * @param msg Mensaje a enrutar
+	 */
 	@PUT
 	@Path("mandarPropuesta")
 	public void mandarPropuesta(@QueryParam("proceso") String proceso, mensajes.Propuesta msg){
@@ -55,6 +89,14 @@ public class Dispatcher {
 		this.procesosLocales.get(proceso).recibirPropuesta( msg);
 	}
 	
+	/**
+	 * Enruta el acuerdo de orden 'msg' al proceso 'process', siendo el proceso local
+	 * al objeto Dispatcher
+	 * @see Dispatcher
+	 * @see mensajes.Acuerdo
+	 * @param proceso Identificador del proceso local
+	 * @param msg Mensaje a enrutar
+	 */
 	@PUT
 	@Path("mandarAcuerdo")
 	public void mandarAcuerdo(@QueryParam("proceso") String proceso, mensajes.Acuerdo msg){
@@ -62,6 +104,11 @@ public class Dispatcher {
 		this.procesosLocales.get(proceso).recibirAcuerdo( msg);
 	}
 	
+	/**
+	 * Envía un mensaje de prueba a los procesos locales para que realicen una 
+	 * multidifucsión del mismo.
+	 * Usar únicamente con fines de debuggeo
+	 */
 	@PUT
 	@Path("forzarMulticast")
 	public void multicast(){
