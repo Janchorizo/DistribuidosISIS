@@ -6,11 +6,14 @@ import java.util.concurrent.Semaphore;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
 
+import mensajes.Msg;
+
 public class Process extends Thread{
-	private ArrayList<String[]> procesos;
+	private ArrayList<ProcessDir> dirProcesos;
 	private Semaphore allDone;
 	private String id;
 	private int contador;
@@ -21,8 +24,8 @@ public class Process extends Thread{
 		this.contador = 0;
 	}
 	
-	public void putProcesos( ArrayList<String[]> procesos){
-		this.procesos = procesos;
+	public void putProcesos( ArrayList<ProcessDir> dirProcesos){
+		this.dirProcesos = dirProcesos;
 	}
 	
 	public void run(){
@@ -47,7 +50,7 @@ public class Process extends Thread{
 		
 		System.out.println("Proceso " + this.id + "\n" +
 				"Recibido " + msg.id + " de " + msg.emisor + "\n" +
-				"Orden : " + msg.orden +
+				"Orden : " + msg.orden + "\n" + 
 				"Cuerpo : " + msg.cuerpo);
 		
 		return( err);
@@ -75,25 +78,26 @@ public class Process extends Thread{
 		return( err);
 	}
 	
-	private int broadcastMsg( String msg, String serviceUri){
+	public int multicast( Msg msg, String serviceUri){
 		
 		int err = 0;
-		/*
+		
 		Client client = ClientBuilder.newClient();
 		URI uri;
 		WebTarget target; 
 		
-		for( String[] process : this.processList){
-			uri = UriBuilder.fromUri( );
+		for( ProcessDir proceso : this.dirProcesos){
+			uri = UriBuilder.fromUri( "http://"+ proceso.dispatcherIp +":8080/SD_ISIS/dispatcher").build();
 			target = client.target( uri);
 			
 			target
 				.path( serviceUri)
+				.queryParam("proceso", proceso.processId)
 				.request()
 				.header("Content-type", "application/json")
-				.post( );
+				.put( Entity.json(msg));
 		}
 		
-	*/	return( err);
+		return( err);
 	}
 }
