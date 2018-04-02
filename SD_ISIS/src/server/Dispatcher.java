@@ -62,10 +62,12 @@ public class Dispatcher {
 			this.procesosLocales.put("2", new Process( "2"));
 			
 			this.procesos = new ArrayList<ProcessDir>();
-			this.procesos.add(new ProcessDir( "1", "localhost"));
-			this.procesos.add(new ProcessDir( "2", "localhost"));
+			this.procesos.add(new ProcessDir( "1", "192.168.1.105"));
+			this.procesos.add(new ProcessDir( "2", "192.168.1.105"));
+			this.procesos.add(new ProcessDir( "3", "192.168.1.103"));
+			this.procesos.add(new ProcessDir( "4", "192.168.1.103"));
 			
-			this.descubrirProcesos( 12);
+			//this.descubrirProcesos( 12);
 			
 			for( Process proceso : procesosLocales.values()){
 				proceso.putProcesos( procesos);
@@ -79,8 +81,9 @@ public class Dispatcher {
 	 * notificaciones de otros Dispatchers, para descubrir sus procesos.
 	 * @param timeout Tiempo dedicado al descubrimiento de servicicios
 	 */
-	private void descubrirProcesos( long timeout){
+	private void descubrirProcesos( ){
 		try {
+			System.out.println("descubriendo");
 			MulticastSocket msk = new MulticastSocket( this.puertoDescubrimientoServicios);
 			msk.joinGroup( InetAddress.getByName( this.ipDescubrimientoServicios));
 			
@@ -89,12 +92,16 @@ public class Dispatcher {
 			
 			for( int i = 0; i<4; i++){
 				this.difundirProcesos();
+				
+				long tiempo = (long)(1000*( 1 + 0.5*Math.random()));
+				Thread.sleep(tiempo);
+				
 				msk.receive(dpg);
 				System.out.println( "Recibido " + new String( dpg.getData(), Charset.forName("UTF-8")));
 			}
 			
 			msk.leaveGroup( InetAddress.getByName( this.ipDescubrimientoServicios));
-		} catch (IOException e) {
+		} catch (IOException | InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
