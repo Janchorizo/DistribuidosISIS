@@ -1,5 +1,14 @@
 package server;
 
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,8 +48,13 @@ import javax.ws.rs.core.MediaType;
 public class Dispatcher {
 	private HashMap<String, Process> procesosLocales;
 	private ArrayList<ProcessDir> procesos;
+	private String ipDescubrimientoServicios;
+	private int puertoDescubrimientoServicios;
 	
 	public Dispatcher(){
+		this.puertoDescubrimientoServicios = 8888;
+		this.ipDescubrimientoServicios = "225.0.0.1";
+		
 		if( this.procesosLocales == null){
 			this.procesosLocales =  new HashMap<String, Process>();
 			
@@ -51,12 +65,87 @@ public class Dispatcher {
 			this.procesos.add(new ProcessDir( "1", "localhost"));
 			this.procesos.add(new ProcessDir( "2", "localhost"));
 			
+			this.descubrirProcesos( 12);
+			
 			for( Process proceso : procesosLocales.values()){
 				proceso.putProcesos( procesos);
 				proceso.start();
 			}	
 		}
 	}
+	
+	/**
+	 * Se hace uso de un canal de multicast para la notificación y recibo de 
+	 * notificaciones de otros Dispatchers, para descubrir sus procesos.
+	 * @param timeout Tiempo dedicado al descubrimiento de servicicios
+	 */
+	private void descubrirProcesos( long timeout){
+		this.difundirProcesos();
+		
+		try {
+			MulticastSocket msk = new MulticastSocket( this.puertoDescubrimientoServicios);
+			msk.joinGroup( InetAddress.getByName( this.ipDescubrimientoServicios));
+			
+			byte [] data = new byte [1024];
+			DatagramPacket dpg = new DatagramPacket( data, data.length);
+			
+			msk.receive(dpg);
+			
+			System.out.println( "Recibido " + new String( dpg.getData(), Charset.forName("UTF-8")));
+			msk.leaveGroup( InetAddress.getByName( this.ipDescubrimientoServicios));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Se manda la información sobre los procesos a una ip multicast
+	 */
+	private void difundirProcesos( ){
+		try {
+			MulticastSocket skt = new MulticastSocket( this.puertoDescubrimientoServicios);
+			
+			Object[] nombreProcesosLocales = this.procesosLocales.keySet().toArray();
+			byte [] data = ( "dispatcher" +"-"+
+					nombreProcesosLocales[0]+"-"+
+					nombreProcesosLocales[1]).getBytes( Charset.forName("UTF-8"));
+			DatagramPacket dpg = new DatagramPacket( data, 
+					data.length, 
+					InetAddress.getByName( this.ipDescubrimientoServicios), 
+					this.puertoDescubrimientoServicios);
+			//System.out.println( "Mensaje : " + new String( data, Charset.forName("UTF-8")));
+			
+			skt.send(dpg);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Se manda la información sobre los procesos como respuesta a una difusión previa
+	 * @param dest Destinatario de la información (un Dispatcher)
+	 */
+	/*
+	private void difundirProcesos( InetAddress dest){
+		try {
+			Object[] nombreProcesosLocales = this.procesosLocales.keySet().toArray();
+			
+			byte [] data = ( "dispatcher" +"-"+
+					nombreProcesosLocales[0]+"-"+
+					nombreProcesosLocales[1]).getBytes( Charset.forName("UTF-8"));
+			DatagramPacket dpg = new DatagramPacket( data, data.length);
+			
+			System.out.println( "Mensaje : " + new String( data, Charset.forName("UTF-8")));
+				
+			DatagramSocket skt = new DatagramSocket( this.puertoDescubrimientoServicios);
+			skt.send(dpg);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}*/
 	
 	/**
 	 * Enruta el mensaje 'msg' al proceso 'process', siendo el proceso local

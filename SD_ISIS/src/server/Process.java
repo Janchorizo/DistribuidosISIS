@@ -87,7 +87,9 @@ public class Process extends Thread{
 		
 		Client client = ClientBuilder.newClient();
 		URI uri;
-		WebTarget target; 
+		WebTarget target;
+		
+		msg.emisor = this.id;
 		
 		for( ProcessDir proceso : this.dirProcesos){
 			uri = UriBuilder.fromUri( "http://"+ proceso.dispatcherIp +":8080/SD_ISIS/dispatcher").build();
