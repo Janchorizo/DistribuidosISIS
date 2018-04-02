@@ -80,8 +80,6 @@ public class Dispatcher {
 	 * @param timeout Tiempo dedicado al descubrimiento de servicicios
 	 */
 	private void descubrirProcesos( long timeout){
-		this.difundirProcesos();
-		
 		try {
 			MulticastSocket msk = new MulticastSocket( this.puertoDescubrimientoServicios);
 			msk.joinGroup( InetAddress.getByName( this.ipDescubrimientoServicios));
@@ -89,9 +87,12 @@ public class Dispatcher {
 			byte [] data = new byte [1024];
 			DatagramPacket dpg = new DatagramPacket( data, data.length);
 			
-			msk.receive(dpg);
+			for( int i = 0; i<4; i++){
+				this.difundirProcesos();
+				msk.receive(dpg);
+				System.out.println( "Recibido " + new String( dpg.getData(), Charset.forName("UTF-8")));
+			}
 			
-			System.out.println( "Recibido " + new String( dpg.getData(), Charset.forName("UTF-8")));
 			msk.leaveGroup( InetAddress.getByName( this.ipDescubrimientoServicios));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -122,30 +123,6 @@ public class Dispatcher {
 			e.printStackTrace();
 		}
 	}
-	
-	/**
-	 * Se manda la información sobre los procesos como respuesta a una difusión previa
-	 * @param dest Destinatario de la información (un Dispatcher)
-	 */
-	/*
-	private void difundirProcesos( InetAddress dest){
-		try {
-			Object[] nombreProcesosLocales = this.procesosLocales.keySet().toArray();
-			
-			byte [] data = ( "dispatcher" +"-"+
-					nombreProcesosLocales[0]+"-"+
-					nombreProcesosLocales[1]).getBytes( Charset.forName("UTF-8"));
-			DatagramPacket dpg = new DatagramPacket( data, data.length);
-			
-			System.out.println( "Mensaje : " + new String( data, Charset.forName("UTF-8")));
-				
-			DatagramSocket skt = new DatagramSocket( this.puertoDescubrimientoServicios);
-			skt.send(dpg);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}*/
 	
 	/**
 	 * Enruta el mensaje 'msg' al proceso 'process', siendo el proceso local
