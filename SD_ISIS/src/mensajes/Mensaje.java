@@ -22,6 +22,11 @@ public class Mensaje extends Msg {
 		this.cuerpo = cuerpo;
 	}
 	
+	@Override
+	public String toString(){
+		return this.toJSON();
+	}
+	
 	/**
 	 * Genera una cadena con el formato JSON donde las claves son el nombre de los
 	 * atributos de la clase, y el valor, el actual para la instancia correspondiente.
@@ -29,7 +34,7 @@ public class Mensaje extends Msg {
 	 */
 	@Override
 	public String toJSON(){
-		return String.format("{ \"id\":\"%s\", \"emisor\":\"%s\", \"orden\":\"%d\", \"cuerpo\":\"%s\" }", 
-				this.id, this.emisor, this.orden, this.cuerpo);
+		return String.format("{ \"id\":\"%s\", \"emisor\":\"%s\", \"orden\":\"%d\", \"definitivo\":\"%s\", \"cuerpo\":\"%s\" }", 
+				this.id, this.emisor, this.orden, this.definitivo, this.cuerpo);
 	}
 }

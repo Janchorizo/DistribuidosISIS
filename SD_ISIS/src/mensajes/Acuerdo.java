@@ -15,14 +15,20 @@ public class Acuerdo extends Msg {
 	 * Indica si el orden del mensaje asociado es final o no.<br>
 	 * En el caso de un acuerdo, es el orden definitivo.  
 	 */
-	public final boolean definitivo = true;
 	
 	public Acuerdo(){
 		super();
+		this.definitivo = true;
 	}
 	
 	public Acuerdo( String id, String emisor, int orden){
 		super( id, emisor, orden);
+		this.definitivo = true;
+	}
+	
+	@Override
+	public String toString(){
+		return this.toJSON();
 	}
 	
 	/**

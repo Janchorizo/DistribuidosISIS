@@ -1,5 +1,7 @@
 package mensajes;
 
+import java.util.Comparator;
+
 /**
  * Envoltorio para el envío y recepción de información a través de servicios
  * web REST que usen el formato JSON para los argumentos.<br>
@@ -28,7 +30,7 @@ package mensajes;
  * @author alex
  *
  */
-public class Msg {
+public class Msg implements Comparable<Msg>{
 	/**
 	 * Identificador del mensaje
 	 */
@@ -41,17 +43,28 @@ public class Msg {
 	 * Se corresponde con el tiempo lógico de Lamport
 	 */
 	public int orden;
+	/**
+	 * Si el orden es el definitivo o no
+	 */
+	public boolean definitivo;
 	
 	public Msg(){
 		this.id = "none";
 		this.emisor = "none";
 		this.orden = -1;
+		this.definitivo = false;
 	}
 	
 	public Msg( String id, String emisor, int orden){
 		this.id = id;
 		this.emisor = emisor;
 		this.orden = orden;
+		this.definitivo = false;
+	}
+	
+	@Override
+	public String toString(){
+		return this.toJSON();
 	}
 	
 	/**
@@ -60,7 +73,18 @@ public class Msg {
 	 * @return <code>String</code> Cadena con el contenido del mensaje en formato JSON
 	 */
 	public String toJSON(){
-		return String.format("{ \"id\":\"%s\", \"emisor\":\"%s\", \"orden\":\"%d\" }", 
-				this.id, this.emisor, this.orden);
+		return String.format("{ \"id\":\"%s\", \"emisor\":\"%s\", \"definitivo\":\"%s\", \"orden\":\"%d\" }", 
+				this.id, this.emisor, this.definitivo, this.orden);
 	}
+
+	@Override
+	public int compareTo(Msg arg0) {
+		return this.orden - ((Msg)arg0).orden;
+	}
+	
+	public static Comparator<Msg> MsgOrderComparator = new Comparator<Msg> (){
+		public int compare( Msg msg1, Msg msg2){
+			return msg1.compareTo(msg2);
+		}
+	};
 }

@@ -14,14 +14,21 @@ public class Propuesta extends Msg {
 	 * Indica si el orden del mensaje asociado es final o no.<br>
 	 * En el caso de una propuesta, es el orden no es definitivo.  
 	 */
-	public final boolean definitivo = false;
+	public int numPropuestas;
 	
 	public Propuesta(){
 		super();
+		this.numPropuestas = 0;
 	}
 	
-	public Propuesta( String id, String emisor, int orden){
+	public Propuesta( String id, String emisor, int orden, int numPropuestas){
 		super( id, emisor, orden);
+		this.numPropuestas = numPropuestas;
+	}
+	
+	@Override
+	public String toString(){
+		return this.toJSON();
 	}
 	
 	/**
@@ -31,7 +38,7 @@ public class Propuesta extends Msg {
 	 */
 	@Override
 	public String toJSON(){
-		return String.format("{ \"id\":\"%s\", \"emisor\":\"%s\", \"orden\":\"%d\", \"definitivo\":\"%s\" }", 
-				this.id, this.emisor, this.orden, this.definitivo);
+		return String.format("{ \"id\":\"%s\", \"emisor\":\"%s\", \"orden\":\"%d\", \"definitivo\":\"%s\", \"numPropuestas\":\"%d\" }", 
+				this.id, this.emisor, this.orden, this.definitivo, this.numPropuestas);
 	}
 }

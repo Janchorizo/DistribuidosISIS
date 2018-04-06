@@ -1,25 +1,12 @@
 package server;
 
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
 
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -48,13 +35,8 @@ import javax.ws.rs.core.MediaType;
 public class Dispatcher {
 	private HashMap<String, Process> procesosLocales;
 	private ArrayList<ProcessDir> procesos;
-	private String ipDescubrimientoServicios;
-	private int puertoDescubrimientoServicios;
 	
 	public Dispatcher(){
-		this.puertoDescubrimientoServicios = 8888;
-		this.ipDescubrimientoServicios = "225.0.0.1";
-		
 		if( this.procesosLocales == null){
 			this.procesosLocales =  new HashMap<String, Process>();
 			
@@ -62,13 +44,11 @@ public class Dispatcher {
 			this.procesosLocales.put("2", new Process( "2"));
 			
 			this.procesos = new ArrayList<ProcessDir>();
-			this.procesos.add(new ProcessDir( "1", "192.168.1.105"));
-			this.procesos.add(new ProcessDir( "2", "192.168.1.105"));
-			this.procesos.add(new ProcessDir( "3", "192.168.1.103"));
-			this.procesos.add(new ProcessDir( "4", "192.168.1.103"));
-			
-			//this.descubrirProcesos( 12);
-			
+			this.procesos.add(new ProcessDir( "1", "localhost"));
+			this.procesos.add(new ProcessDir( "2", "localhost"));
+			//this.procesos.add(new ProcessDir( "3", "192.168.1.103"));
+			//this.procesos.add(new ProcessDir( "4", "192.168.1.103"));
+
 			for( Process proceso : procesosLocales.values()){
 				proceso.putProcesos( procesos);
 				proceso.start();
@@ -76,59 +56,10 @@ public class Dispatcher {
 		}
 	}
 	
-	/**
-	 * Se hace uso de un canal de multicast para la notificación y recibo de 
-	 * notificaciones de otros Dispatchers, para descubrir sus procesos.
-	 * @param timeout Tiempo dedicado al descubrimiento de servicicios
-	 */
-	private void descubrirProcesos( ){
-		try {
-			System.out.println("descubriendo");
-			MulticastSocket msk = new MulticastSocket( this.puertoDescubrimientoServicios);
-			msk.joinGroup( InetAddress.getByName( this.ipDescubrimientoServicios));
-			
-			byte [] data = new byte [1024];
-			DatagramPacket dpg = new DatagramPacket( data, data.length);
-			
-			for( int i = 0; i<4; i++){
-				this.difundirProcesos();
-				
-				long tiempo = (long)(1000*( 1 + 0.5*Math.random()));
-				Thread.sleep(tiempo);
-				
-				msk.receive(dpg);
-				System.out.println( "Recibido " + new String( dpg.getData(), Charset.forName("UTF-8")));
-			}
-			
-			msk.leaveGroup( InetAddress.getByName( this.ipDescubrimientoServicios));
-		} catch (IOException | InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	/**
-	 * Se manda la información sobre los procesos a una ip multicast
-	 */
-	private void difundirProcesos( ){
-		try {
-			MulticastSocket skt = new MulticastSocket( this.puertoDescubrimientoServicios);
-			
-			Object[] nombreProcesosLocales = this.procesosLocales.keySet().toArray();
-			byte [] data = ( "dispatcher" +"-"+
-					nombreProcesosLocales[0]+"-"+
-					nombreProcesosLocales[1]).getBytes( Charset.forName("UTF-8"));
-			DatagramPacket dpg = new DatagramPacket( data, 
-					data.length, 
-					InetAddress.getByName( this.ipDescubrimientoServicios), 
-					this.puertoDescubrimientoServicios);
-			//System.out.println( "Mensaje : " + new String( data, Charset.forName("UTF-8")));
-			
-			skt.send(dpg);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	@PUT
+	@Path("start")
+	public void start(){
+		System.out.println(" server started");
 	}
 	
 	/**
@@ -143,8 +74,8 @@ public class Dispatcher {
 	@PUT
 	@Path("mandarMensaje")
 	public void mandarMensaje(@QueryParam("proceso") String proceso, mensajes.Mensaje msg){
-		//coger el proceso correspondiente
-		this.procesosLocales.get(proceso).recibirMensaje( msg);
+		if( msg != null)
+			this.procesosLocales.get(proceso).recibirMensaje( msg);
 	}
 	
 	/**
@@ -158,8 +89,8 @@ public class Dispatcher {
 	@PUT
 	@Path("mandarPropuesta")
 	public void mandarPropuesta(@QueryParam("proceso") String proceso, mensajes.Propuesta msg){
-		//coger el proceso correspondiente
-		this.procesosLocales.get(proceso).recibirPropuesta( msg);
+		if( msg != null)
+			this.procesosLocales.get(proceso).recibirPropuesta( msg);
 	}
 	
 	/**
@@ -173,8 +104,8 @@ public class Dispatcher {
 	@PUT
 	@Path("mandarAcuerdo")
 	public void mandarAcuerdo(@QueryParam("proceso") String proceso, mensajes.Acuerdo msg){
-		//coger el proceso correspondiente
-		this.procesosLocales.get(proceso).recibirAcuerdo( msg);
+		if( msg != null)
+			this.procesosLocales.get(proceso).recibirAcuerdo( msg);
 	}
 	
 	/**
