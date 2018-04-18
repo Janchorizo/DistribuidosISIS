@@ -24,7 +24,7 @@ public class Mensaje extends Msg {
 	
 	@Override
 	public String toString(){
-		return this.toJSON();
+		return this.cuerpo;
 	}
 	
 	/**
