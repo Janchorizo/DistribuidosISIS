@@ -223,12 +223,13 @@ public class Process extends Thread{
 			err = unicast( msg, serviceUri, proceso);
 			if( -1 == err)
 				break;
+			/*
 			try {	
 				long tiempo = (long)(1000*( 0.2 + 0.3*Math.random()));		
 				Thread.sleep(tiempo);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-			}
+			}*/
 		}
 		return err;
 	}

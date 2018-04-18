@@ -1,15 +1,28 @@
 package server;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
 
 
 /**
@@ -37,23 +50,21 @@ public class Dispatcher {
 	private ArrayList<ProcessDir> procesos;
 	
 	public Dispatcher(){
-		if( this.procesosLocales == null){
-			this.procesosLocales =  new HashMap<String, Process>();
-			
-			this.procesosLocales.put("1", new Process( "1"));
-			this.procesosLocales.put("2", new Process( "2"));
-			
-			this.procesos = new ArrayList<ProcessDir>();
-			this.procesos.add(new ProcessDir( "1", "localhost"));
-			this.procesos.add(new ProcessDir( "2", "localhost"));
-			//this.procesos.add(new ProcessDir( "3", "192.168.1.103"));
-			//this.procesos.add(new ProcessDir( "4", "192.168.1.103"));
+		this.procesosLocales =  new HashMap<String, Process>();
+		
+		this.procesosLocales.put("1", new Process( "1"));
+		this.procesosLocales.put("2", new Process( "2"));
+		
+		this.procesos = new ArrayList<ProcessDir>();
+		this.procesos.add(new ProcessDir( "1", "localhost"));
+		this.procesos.add(new ProcessDir( "2", "localhost"));
+		//this.procesos.add(new ProcessDir( "3", "192.168.1.103"));
+		//this.procesos.add(new ProcessDir( "4", "192.168.1.103"));
 
-			for( Process proceso : procesosLocales.values()){
-				proceso.putProcesos( procesos);
-				proceso.start();
-			}	
-		}
+		for( Process proceso : procesosLocales.values()){
+			proceso.putProcesos( procesos);
+			proceso.start();
+		}	
 	}
 	
 	@PUT
@@ -126,5 +137,65 @@ public class Dispatcher {
 			System.out.println("despachando mensaje");
 			proceso.multicast( msg, "mandarMensaje");
 		}
+	}
+	
+	@GET 
+	@Path("recuperarResultados")
+	@Produces( MediaType.TEXT_PLAIN)
+	public String recuperar( @QueryParam("proceso") String proceso){
+		java.nio.file.Path rutaLog;
+		rutaLog = Paths.get("isis_"+proceso+".log");
+		String r = "";
+		if( this.procesosLocales.containsKey(proceso))
+			try {
+				r = new String(Files.readAllBytes(rutaLog), StandardCharsets.UTF_8);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} 
+		System.out.println(r);
+		return r;
+	}
+	
+	@GET 
+	@Path("comprobarResultados")
+	@Produces( MediaType.TEXT_PLAIN)
+	public String comprobar(){
+		Client client; 
+		URI uri;
+		WebTarget target;
+		FileWriter fw;
+		BufferedWriter bw;
+		PrintWriter pw;
+		String msg = "Comprobación de los resultados";
+		
+		for( ProcessDir proceso : this.procesos){
+			client = ClientBuilder.newClient();
+			uri = UriBuilder.fromUri( "http://"+ proceso.dispatcherIp +":8080/SD_ISIS/dispatcher/recuperarResultados/").build();
+			target = client.target( uri);
+			
+			String respuesta = target
+				.queryParam("proceso", proceso.processId)
+				.request(MediaType.TEXT_PLAIN)
+				.get( String.class);
+			
+			try {
+				fw = new FileWriter("respuesta"+proceso.processId+".txt");
+			
+				bw = new BufferedWriter(fw);
+				pw = new PrintWriter(bw); 
+			
+				pw.println(respuesta);
+				
+				pw.flush();
+				pw.close();
+				bw.close();
+				fw.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		return msg;
 	}
 }
