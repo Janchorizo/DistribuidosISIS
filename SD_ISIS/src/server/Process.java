@@ -21,17 +21,19 @@ public class Process extends Thread{
 	private ArrayList<ProcessDir> dirProcesos;
 	private ArrayList<mensajes.Mensaje> mensajesRecibidos;
 	private ConcurrentHashMap<String, mensajes.Propuesta> propuestasRecibidas;
-	private Semaphore sem_mensajes, sem_orden, sem_fichero;
+	private Semaphore sem_mensajes, sem_orden, sem_fichero, sem_terminado;
 	private String id;
 	private String rutaFichero;
-	private int orden;
+	private int orden, acuerdos;
 	
 	public Process( String id){
 		this.id = id;
 		this.orden = 0;
+		this.acuerdos = 0;
 		this.sem_orden = new Semaphore( 1);
 		this.sem_mensajes = new Semaphore( 1);
 		this.sem_fichero = new Semaphore( 1);
+		this.sem_terminado = new Semaphore( 0);
 		
 		this.rutaFichero = "isis_"+ this.id +".log";
 		try{
@@ -88,7 +90,7 @@ public class Process extends Thread{
 		long tiempo;
 		int contador;
 		
-		for( contador = 0; contador < 5; contador++){
+		for( contador = 0; contador < 100; contador++){
 			if( -1 == this.lc1())
 				break;
 			
@@ -110,9 +112,14 @@ public class Process extends Thread{
 			e.printStackTrace();
 		}
 		
-		System.out.println("Proceso "+this.id);
-		for(mensajes.Mensaje m : this.mensajesRecibidos){
-			System.out.println(m);
+		try {
+			this.sem_terminado.acquire( 1);
+			System.out.println("Proceso "+this.id);
+			for(mensajes.Mensaje m : this.mensajesRecibidos){
+				System.out.println(m);
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -174,45 +181,53 @@ public class Process extends Thread{
 		if( -1 == this.lc2(msg.orden))
 			return -1;
 		
-		//Actualizar el orden del mensaje correspondiente y reordenar
-		for( mensajes.Mensaje m : this.mensajesRecibidos){
-			if( m.id.equals( msg.id)){
-				try{
-					this.sem_mensajes.acquire();
+		try{
+			this.sem_mensajes.acquire();
+			//Actualizar el orden del mensaje correspondiente y reordenar
+			for( mensajes.Mensaje m : this.mensajesRecibidos){
+				if( m.id.equals( msg.id)){
 					m.definitivo = true;
 					m.orden = msg.orden;
 					this.mensajesRecibidos.sort( mensajes.Msg.MsgOrderComparator);
-					this.sem_mensajes.release(1);
-				}catch( Exception e){
-					e.printStackTrace();
+							
+					break;
 				}
-				break;
 			}
+		}catch( Exception e){
+			e.printStackTrace();
+		}finally{
+			this.sem_mensajes.release(1);
 		}
 		
 		try{
 			this.sem_mensajes.acquire();
-			msg_final = this.mensajesRecibidos.remove(0);
-			System.out.println(msg_final);
+			while(!this.mensajesRecibidos.isEmpty() && this.mensajesRecibidos.get(0).definitivo == true){
+				msg_final = this.mensajesRecibidos.remove(0);
+				File fd = new File( this.rutaFichero);
+				
+				this.sem_fichero.acquire();
+				FileWriter fw = new FileWriter(fd, true);
+				BufferedWriter bw = new BufferedWriter(fw);
+				PrintWriter pw = new PrintWriter(bw); 
+				
+				pw.println(msg_final);
+				
+				pw.flush();
+				pw.close();
+				bw.close();
+				fw.close();
+				this.acuerdos += 1;
+				this.sem_fichero.release(1);
+			}
+			
 			this.sem_mensajes.release(1);
-			
-			File fd = new File( this.rutaFichero);
-			
-			this.sem_fichero.acquire();
-			FileWriter fw = new FileWriter(fd, true);
-			BufferedWriter bw = new BufferedWriter(fw);
-			PrintWriter pw = new PrintWriter(bw); 
-			
-			pw.println(msg_final);
-			
-			pw.flush();
-			pw.close();
-			bw.close();
-			fw.close();
-			this.sem_fichero.release(1);
+		
 		}catch( Exception e){
 			e.printStackTrace();
 		}
+		
+		if( this.acuerdos == 400)
+			this.sem_terminado.release(1);
 		
 		return( err);
 	}

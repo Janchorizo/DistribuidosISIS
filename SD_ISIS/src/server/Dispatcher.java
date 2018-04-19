@@ -58,8 +58,8 @@ public class Dispatcher {
 		this.procesos = new ArrayList<ProcessDir>();
 		this.procesos.add(new ProcessDir( "1", "localhost"));
 		this.procesos.add(new ProcessDir( "2", "localhost"));
-		//this.procesos.add(new ProcessDir( "3", "192.168.1.103"));
-		//this.procesos.add(new ProcessDir( "4", "192.168.1.103"));
+		this.procesos.add(new ProcessDir( "3", "192.168.1.110"));
+		this.procesos.add(new ProcessDir( "4", "192.168.1.110"));
 
 		for( Process proceso : procesosLocales.values()){
 			proceso.putProcesos( procesos);
@@ -152,7 +152,6 @@ public class Dispatcher {
 			} catch (IOException e) {
 				e.printStackTrace();
 			} 
-		System.out.println(r);
 		return r;
 	}
 	
