@@ -24,9 +24,10 @@ public class Process extends Thread{
 	private Semaphore sem_mensajes, sem_orden, sem_fichero, sem_terminado;
 	private String id;
 	private String rutaFichero;
-	private int orden, acuerdos;
+	private int orden, acuerdos, acuerdosTotales;
+	private String logDir;
 	
-	public Process( String id){
+	public Process( String id, String logDir){
 		this.id = id;
 		this.orden = 0;
 		this.acuerdos = 0;
@@ -34,8 +35,9 @@ public class Process extends Thread{
 		this.sem_mensajes = new Semaphore( 1);
 		this.sem_fichero = new Semaphore( 1);
 		this.sem_terminado = new Semaphore( 0);
+		this.logDir = logDir;
 		
-		this.rutaFichero = "isis_"+ this.id +".log";
+		this.rutaFichero = logDir + "isis_"+ this.id +".log";
 		try{
 			File fd = new File( this.rutaFichero);
 			
@@ -46,6 +48,7 @@ public class Process extends Thread{
 				fd.createNewFile();
 			this.sem_fichero.release(1);
 		}catch( Exception e){
+			System.out.println("Excepcion con el fichero");
 			e.printStackTrace();
 		}
 		
@@ -55,6 +58,7 @@ public class Process extends Thread{
 	
 	public void putProcesos( ArrayList<ProcessDir> dirProcesos){
 		this.dirProcesos = dirProcesos;
+		this.acuerdosTotales = 10 * dirProcesos.size();
 	}
 	
 	private int lc1(){
@@ -90,7 +94,7 @@ public class Process extends Thread{
 		long tiempo;
 		int contador;
 		
-		for( contador = 0; contador < 100; contador++){
+		for( contador = 0; contador < 10; contador++){
 			if( -1 == this.lc1())
 				break;
 			
@@ -226,7 +230,7 @@ public class Process extends Thread{
 			e.printStackTrace();
 		}
 		
-		if( this.acuerdos == 400)
+		if( this.acuerdos == this.acuerdosTotales)
 			this.sem_terminado.release(1);
 		
 		return( err);

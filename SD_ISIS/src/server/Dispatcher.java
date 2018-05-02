@@ -48,18 +48,20 @@ import javax.ws.rs.core.UriBuilder;
 public class Dispatcher {
 	private HashMap<String, Process> procesosLocales;
 	private ArrayList<ProcessDir> procesos;
+	private String logDir;
 	
 	public Dispatcher(){
+		this.logDir = "/home/i0917867/Documentos";
 		this.procesosLocales =  new HashMap<String, Process>();
 		
-		this.procesosLocales.put("1", new Process( "1"));
-		this.procesosLocales.put("2", new Process( "2"));
+		this.procesosLocales.put("1", new Process( "1", logDir));
+		this.procesosLocales.put("2", new Process( "2", logDir));
 		
 		this.procesos = new ArrayList<ProcessDir>();
 		this.procesos.add(new ProcessDir( "1", "localhost"));
 		this.procesos.add(new ProcessDir( "2", "localhost"));
-		this.procesos.add(new ProcessDir( "3", "192.168.1.110"));
-		this.procesos.add(new ProcessDir( "4", "192.168.1.110"));
+		//this.procesos.add(new ProcessDir( "3", "192.168.1.110"));
+		//this.procesos.add(new ProcessDir( "4", "192.168.1.110"));
 
 		for( Process proceso : procesosLocales.values()){
 			proceso.putProcesos( procesos);
@@ -144,7 +146,7 @@ public class Dispatcher {
 	@Produces( MediaType.TEXT_PLAIN)
 	public String recuperar( @QueryParam("proceso") String proceso){
 		java.nio.file.Path rutaLog;
-		rutaLog = Paths.get("isis_"+proceso+".log");
+		rutaLog = Paths.get(logDir+"isis_"+proceso+".log");
 		String r = "";
 		if( this.procesosLocales.containsKey(proceso))
 			try {
@@ -178,7 +180,7 @@ public class Dispatcher {
 				.get( String.class);
 			
 			try {
-				fw = new FileWriter("respuesta"+proceso.processId+".txt");
+				fw = new FileWriter(logDir+"/respuesta"+proceso.processId+".txt");
 			
 				bw = new BufferedWriter(fw);
 				pw = new PrintWriter(bw); 
