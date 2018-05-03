@@ -1,9 +1,14 @@
 package server;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringBufferInputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -48,31 +53,72 @@ import javax.ws.rs.core.UriBuilder;
 public class Dispatcher {
 	private HashMap<String, Process> procesosLocales;
 	private ArrayList<ProcessDir> procesos;
-	private String logDir;
+	private String filesDir;
 	
 	public Dispatcher(){
-		this.logDir = "/home/i0917867/Documentos";
+		this.filesDir = "/home/i0917867/Documentos/trabajo_isis/";
 		this.procesosLocales =  new HashMap<String, Process>();
+		String locales = cargarLocales();
+		String local1 = locales.split(";")[0];
+		String local2 = locales.split(";")[1];
 		
-		this.procesosLocales.put("1", new Process( "1", logDir));
-		this.procesosLocales.put("2", new Process( "2", logDir));
+		this.procesosLocales.put(local1, new Process( local1, filesDir));
+		this.procesosLocales.put(local2, new Process( local2, filesDir));
 		
-		this.procesos = new ArrayList<ProcessDir>();
-		this.procesos.add(new ProcessDir( "1", "localhost"));
-		this.procesos.add(new ProcessDir( "2", "localhost"));
-		//this.procesos.add(new ProcessDir( "3", "192.168.1.110"));
-		//this.procesos.add(new ProcessDir( "4", "192.168.1.110"));
-
+		this.procesos = new ArrayList<ProcessDir>(cargarProcesos());
+		
 		for( Process proceso : procesosLocales.values()){
 			proceso.putProcesos( procesos);
 			proceso.start();
+			System.out.println("Process : " + proceso.getName() + " : started");
 		}	
+		System.out.println("Dispatcher started");
+	}
+	
+	private ArrayList<ProcessDir> cargarProcesos(){
+		ArrayList<ProcessDir> procesos = new ArrayList<ProcessDir>();
+		
+		String rutaConf;
+		rutaConf = filesDir+"servidores.conf";
+		
+		try (BufferedReader br = new BufferedReader(new FileReader(rutaConf))) {
+		    String line;
+		    while ((line = br.readLine()) != null) {
+		       System.out.println("linea " + line);
+		       procesos.add(new ProcessDir(
+		    		   line.split(";")[0],
+		    		   line.split(";")[1]
+		    		   ));
+		    }
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return procesos;
+	}
+	
+	private String cargarLocales(){
+		String rutaConf, locales = "";
+		rutaConf = filesDir+"servidores.locales";
+		
+		try (BufferedReader br = new BufferedReader(new FileReader(rutaConf))) {
+		    
+			locales = br.readLine();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return locales;
 	}
 	
 	@PUT
 	@Path("start")
 	public void start(){
-		System.out.println(" server started");
+		System.out.println("server started");
 	}
 	
 	/**
@@ -146,7 +192,7 @@ public class Dispatcher {
 	@Produces( MediaType.TEXT_PLAIN)
 	public String recuperar( @QueryParam("proceso") String proceso){
 		java.nio.file.Path rutaLog;
-		rutaLog = Paths.get(logDir+"isis_"+proceso+".log");
+		rutaLog = Paths.get(this.filesDir+"isis_"+proceso+".log");
 		String r = "";
 		if( this.procesosLocales.containsKey(proceso))
 			try {
@@ -180,7 +226,7 @@ public class Dispatcher {
 				.get( String.class);
 			
 			try {
-				fw = new FileWriter(logDir+"/respuesta"+proceso.processId+".txt");
+				fw = new FileWriter(this.filesDir+"respuesta"+proceso.processId+".txt");
 			
 				bw = new BufferedWriter(fw);
 				pw = new PrintWriter(bw); 

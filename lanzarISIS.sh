@@ -9,7 +9,8 @@ function verbose {
     maquinas=()
     puertos=()
     indice=1
-    echo "" > servidores.conf
+    rm -f servidores.conf
+    touch servidores.conf
 
     while true
     do
@@ -27,8 +28,8 @@ function verbose {
         then
             echo "Puerto introducido no válido"
         else
-            echo "$((indice * 2));$ipMaquina;$puertoMaquina-" >> servidores.conf
-            echo "$((indice * 2 + 1));$ipMaquina;$puertoMaquina-" >> servidores.conf
+            echo "$((indice * 2 - 1));$ipMaquina;$puertoMaquina-" >> servidores.conf
+            echo "$((indice * 2 ));$ipMaquina;$puertoMaquina-" >> servidores.conf
             maquinas[$indice]=$ipMaquina
             puertos[$indice]=$puertoMaquina
             indice=$((indice + 1))
@@ -37,15 +38,17 @@ function verbose {
 
 
     echo "Desplegando en las maquinas"
+    indice=1
     for ip in ${maquinas[@]};
     do
         echo "- Desplegando en $ip"
-        ssh $ip "rm -R trabajo_isis; mkdir trabajo_isis; exit"
-        ssh $ip "JRE_HOME=; JAVA_HOME=; exit"
-        scp tomcat.tar.gz $host:trabajo_isis
-        ssh $ip "cd trabajo_isis; tar -zxf tomcat.tar.gz; rm tomcat.tar.gz;"
+	echo "$((indice * 2 - 1));$((indice * 2))" > servidores.locales
+        ssh $ip "rm -f -R ~/Documentos/trabajo_isis; mkdir ~/Documentos/trabajo_isis; JRE_HOME=; JAVA_HOME=; exit"
+        scp tomcat.tar.gz servidores.conf servidores.locales i0917867@$ip:~/Documentos/trabajo_isis/
+        ssh $ip "cd ~/Documentos/trabajo_isis; tar -zxf ~/Documentos/trabajo_isis/tomcat.tar.gz; rm ~/Documentos/trabajo_isis/tomcat.tar.gz;"
         echo "- - Arrancando servidor"
-        ssh $ip "cd trabajo_isis/tomcat/bin; bash startup.sh start; exit;"
+        #ssh $ip "cd trabajo_isis/tomcat/bin; bash startup.sh start; exit;"
+	indice=$((indice + 1))
     done
 
     exit 0;
