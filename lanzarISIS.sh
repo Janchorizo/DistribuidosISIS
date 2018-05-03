@@ -47,7 +47,7 @@ function verbose {
         scp tomcat.tar.gz servidores.conf servidores.locales i0917867@$ip:~/Documentos/trabajo_isis/
         ssh $ip "cd ~/Documentos/trabajo_isis; tar -zxf ~/Documentos/trabajo_isis/tomcat.tar.gz; rm ~/Documentos/trabajo_isis/tomcat.tar.gz;"
         echo "- - Arrancando servidor"
-        #ssh $ip "cd trabajo_isis/tomcat/bin; bash startup.sh start; exit;"
+        #ssh $ip "cd trabajo_isis/tomcat/bin; chmod +x catalina.sh; bash startup.sh start; exit;"
 	indice=$((indice + 1))
     done
 

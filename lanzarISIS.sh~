@@ -9,7 +9,8 @@ function verbose {
     maquinas=()
     puertos=()
     indice=1
-    echo "" > servidores.conf
+    rm -f servidores.conf
+    touch servidores.conf
 
     while true
     do
