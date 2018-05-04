@@ -43,11 +43,11 @@ function verbose {
     do
         echo "- Desplegando en $ip"
 	echo "$((indice * 2 - 1));$((indice * 2))" > servidores.locales
-        ssh $ip "rm -f -R ~/Documentos/trabajo_isis; mkdir ~/Documentos/trabajo_isis; JRE_HOME=; JAVA_HOME=; exit"
+        ssh $ip "rm -f -R ~/Documentos/trabajo_isis; mkdir ~/Documentos/trabajo_isis; JRE_HOME=/opt/jdk1.8.0_60; JAVA_HOME=/opt/jdk1.8.0_60; exit"
         scp tomcat.tar.gz servidores.conf servidores.locales i0917867@$ip:~/Documentos/trabajo_isis/
         ssh $ip "cd ~/Documentos/trabajo_isis; tar -zxf ~/Documentos/trabajo_isis/tomcat.tar.gz; rm ~/Documentos/trabajo_isis/tomcat.tar.gz;"
         echo "- - Arrancando servidor"
-        #ssh $ip "cd trabajo_isis/tomcat/bin; chmod +x catalina.sh; bash startup.sh start; exit;"
+        ssh $ip "cd ~/Documentos/trabajo_isis/TomcatServer/bin; bash startup.sh start; exit;"
 	indice=$((indice + 1))
     done
 
