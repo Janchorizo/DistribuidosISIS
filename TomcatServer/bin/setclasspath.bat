@@ -18,8 +18,6 @@ rem ---------------------------------------------------------------------------
 rem Set JAVA_HOME or JRE_HOME if not already set, ensure any provided settings
 rem are valid and consistent with the selected start-up options and set up the
 rem endorsed directory.
-rem
-rem $Id: setclasspath.bat 1202062 2011-11-15 06:50:02Z mturk $
 rem ---------------------------------------------------------------------------
 
 rem Make sure prerequisite environment variables are set
@@ -69,15 +67,25 @@ goto exit
 :okJava
 rem Don't override the endorsed dir if the user has set it previously
 if not "%JAVA_ENDORSED_DIRS%" == "" goto gotEndorseddir
-rem Set the default -Djava.endorsed.dirs argument
+rem Java 9 no longer supports the java.endorsed.dirs
+rem system property. Only try to use it if
+rem CATALINA_HOME/endorsed exists.
+if not exist "%CATALINA_HOME%\endorsed" goto gotEndorseddir
 set "JAVA_ENDORSED_DIRS=%CATALINA_HOME%\endorsed"
 :gotEndorseddir
 
+rem Don't override _RUNJAVA if the user has set it previously
+if not "%_RUNJAVA%" == "" goto gotRunJava
 rem Set standard command for invoking Java.
-rem Note that NT requires a window name argument when using start.
+rem Also note the quoting as JRE_HOME may contain spaces.
+set _RUNJAVA="%JRE_HOME%\bin\java.exe"
+:gotRunJava
+
+rem Don't override _RUNJDB if the user has set it previously
 rem Also note the quoting as JAVA_HOME may contain spaces.
-set _RUNJAVA="%JRE_HOME%\bin\java"
-set _RUNJDB="%JAVA_HOME%\bin\jdb"
+if not "%_RUNJDB%" == "" goto gotRunJdb
+set _RUNJDB="%JAVA_HOME%\bin\jdb.exe"
+:gotRunJdb
 
 goto end
 

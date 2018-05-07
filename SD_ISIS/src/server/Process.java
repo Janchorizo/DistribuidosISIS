@@ -237,7 +237,15 @@ public class Process extends Thread{
 	
 	public int multicast( Msg msg, String serviceUri){
 		int err = 0;
+		long tiempo;
 		for( ProcessDir proceso : this.dirProcesos){
+			try {	
+				tiempo = (long)(1000*( 0.2 + 0.3*Math.random()));		
+				Thread.sleep(tiempo);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
 			err = unicast( msg, serviceUri, proceso);
 			if( -1 == err)
 				break;

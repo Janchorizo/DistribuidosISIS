@@ -76,16 +76,17 @@ function notverbose {
         echo "- Desplegando en $ip"
 	echo "$((indice * 2 - 1));$((indice * 2))" > servidores.locales
         ssh i0917867@$ip "rm -f -R ~/Documentos/trabajo_isis; 
-			  mkdir ~/Documentos/trabajo_isis; 
-			  JRE_HOME=/opt/jdk1.8.0_60; 
-			  JAVA_HOME=/opt/jdk1.8.0_60; 
-			  CATALINA_HOME=~/Documentos/trabajo_isis/TomcatServer/bin"
+			  mkdir ~/Documentos/trabajo_isis;"
         scp tomcat.tar.gz servidores.conf servidores.locales i0917867@$ip:~/Documentos/trabajo_isis/
-        ssh i0917867@$ip "cd ~/Documentos/trabajo_isis; 
+        ssh i0917867@$ip "export JRE_HOME=/opt/jdk1.8.0_60; 
+			  export JAVA_HOME=/opt/jdk1.8.0_60; 
+			  export CATALINA_HOME=~/Documentos/trabajo_isis/TomcatServer/
+		          cd ~/Documentos/trabajo_isis; 
 			  tar -zxf ~/Documentos/trabajo_isis/tomcat.tar.gz; 
 			  rm ~/Documentos/trabajo_isis/tomcat.tar.gz;
 		          echo '- - Arrancando servidor';
 		          cd TomcatServer/bin; 
+			  bash catalina.sh stop;
  		          bash catalina.sh start"
 	indice=$((indice + 1))
     done
