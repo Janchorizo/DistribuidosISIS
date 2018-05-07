@@ -58,7 +58,7 @@ public class Process extends Thread{
 	
 	public void putProcesos( ArrayList<ProcessDir> dirProcesos){
 		this.dirProcesos = dirProcesos;
-		this.acuerdosTotales = 10 * dirProcesos.size();
+		this.acuerdosTotales = 100 * dirProcesos.size();
 	}
 	
 	private int lc1(){
@@ -94,7 +94,8 @@ public class Process extends Thread{
 		long tiempo;
 		int contador;
 		
-		for( contador = 0; contador < 10; contador++){
+		for( contador = 0; contador < 100; contador++){
+			System.out.println("sent" + contador);
 			if( -1 == this.lc1())
 				break;
 			
@@ -118,10 +119,7 @@ public class Process extends Thread{
 		
 		try {
 			this.sem_terminado.acquire( 1);
-			System.out.println("Proceso "+this.id);
-			for(mensajes.Mensaje m : this.mensajesRecibidos){
-				System.out.println(m);
-			}
+			this.multicast(new Msg(), "procesoTerminado");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -180,6 +178,7 @@ public class Process extends Thread{
 	}
 	
 	public int recibirAcuerdo( mensajes.Acuerdo msg){
+		System.out.println(msg.id + " received");
 		int err = 0;
 		mensajes.Mensaje msg_final;
 		if( -1 == this.lc2(msg.orden))
@@ -242,13 +241,6 @@ public class Process extends Thread{
 			err = unicast( msg, serviceUri, proceso);
 			if( -1 == err)
 				break;
-			/*
-			try {	
-				long tiempo = (long)(1000*( 0.2 + 0.3*Math.random()));		
-				Thread.sleep(tiempo);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}*/
 		}
 		return err;
 	}

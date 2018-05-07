@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.Semaphore;
 
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
@@ -54,10 +55,12 @@ public class Dispatcher {
 	private HashMap<String, Process> procesosLocales;
 	private ArrayList<ProcessDir> procesos;
 	private String filesDir;
+	private Semaphore terminados;
 	
 	public Dispatcher(){
 		this.filesDir = "/home/i0917867/Documentos/trabajo_isis/";
 		this.procesosLocales =  new HashMap<String, Process>();
+		this.terminados = new Semaphore(0);
 		String locales = cargarLocales();
 		String local1 = locales.split(";")[0];
 		String local2 = locales.split(";")[1];
@@ -118,7 +121,22 @@ public class Dispatcher {
 	@PUT
 	@Path("start")
 	public void start(){
-		System.out.println("server started");
+		System.out.println("Servidor arrancado ...");
+	}
+	
+	@GET 
+	@Path("terminado")
+	@Produces( MediaType.TEXT_PLAIN)
+	public String terminado( ){
+		String r = "";
+		
+		try {
+			this.terminados.acquire(2*this.procesos.size());
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		r = "Servidor terminado.";
+		return r;
 	}
 	
 	/**
@@ -201,6 +219,13 @@ public class Dispatcher {
 				e.printStackTrace();
 			} 
 		return r;
+	}
+	
+	@PUT
+	@Path("procesoTerminado")
+	public void procesoTerminado(@QueryParam("proceso") String proceso, mensajes.Acuerdo msg){
+		if( msg != null)
+			this.terminados.release(1);
 	}
 	
 	@GET 

@@ -36,18 +36,64 @@ function verbose {
     do
         echo "- Desplegando en $ip"
 	echo "$((indice * 2 - 1));$((indice * 2))" > servidores.locales
-        ssh i0917867@$ip "rm -f -R ~/Documentos/trabajo_isis; mkdir ~/Documentos/trabajo_isis; JRE_HOME=/opt/jdk1.8.0_60; JAVA_HOME=/opt/jdk1.8.0_60"
+        ssh i0917867@$ip "rm -f -R ~/Documentos/trabajo_isis; 
+			  mkdir ~/Documentos/trabajo_isis; 
+			  JRE_HOME=/opt/jdk1.8.0_60; 
+			  JAVA_HOME=/opt/jdk1.8.0_60; 
+			  CATALINA_HOME=~/Documentos/trabajo_isis/TomcatServer/bin"
         scp tomcat.tar.gz servidores.conf servidores.locales i0917867@$ip:~/Documentos/trabajo_isis/
-        ssh i0917867@$ip "cd ~/Documentos/trabajo_isis; tar -zxf ~/Documentos/trabajo_isis/tomcat.tar.gz; rm ~/Documentos/trabajo_isis/tomcat.tar.gz"
-        echo "- - Arrancando servidor"
-        ssh i0917867@$ip "cd ~/Documentos/trabajo_isis/TomcatServer/bin; bash catalina.sh start &"
+        ssh -t i0917867@$ip "cd ~/Documentos/trabajo_isis; 
+			  tar -zxf ~/Documentos/trabajo_isis/tomcat.tar.gz; 
+			  rm ~/Documentos/trabajo_isis/tomcat.tar.gz;
+		          echo '- - Arrancando servidor';
+		          cd TomcatServer/bin; 
+ 		          bash catalina.sh start"
 	indice=$((indice + 1))
     done
 
     exit 0;
 }
 
-if [ -nz $1];
+function notverbose {
+    maquinas=()
+    indice=1
+    rm -f servidores.conf
+    touch servidores.conf
+
+    for ipMaquina in $@
+    do
+        echo "$((indice * 2 - 1));$ipMaquina;" >> servidores.conf
+	echo "$((indice * 2 ));$ipMaquina;" >> servidores.conf
+	maquinas[$indice]=$ipMaquina
+	indice=$((indice + 1))
+    done
+
+
+    echo "Desplegando en las maquinas"
+    indice=1
+    for ip in ${maquinas[@]};
+    do
+        echo "- Desplegando en $ip"
+	echo "$((indice * 2 - 1));$((indice * 2))" > servidores.locales
+        ssh i0917867@$ip "rm -f -R ~/Documentos/trabajo_isis; 
+			  mkdir ~/Documentos/trabajo_isis; 
+			  JRE_HOME=/opt/jdk1.8.0_60; 
+			  JAVA_HOME=/opt/jdk1.8.0_60; 
+			  CATALINA_HOME=~/Documentos/trabajo_isis/TomcatServer/bin"
+        scp tomcat.tar.gz servidores.conf servidores.locales i0917867@$ip:~/Documentos/trabajo_isis/
+        ssh i0917867@$ip "cd ~/Documentos/trabajo_isis; 
+			  tar -zxf ~/Documentos/trabajo_isis/tomcat.tar.gz; 
+			  rm ~/Documentos/trabajo_isis/tomcat.tar.gz;
+		          echo '- - Arrancando servidor';
+		          cd TomcatServer/bin; 
+ 		          bash catalina.sh start"
+	indice=$((indice + 1))
+    done
+
+    exit 0;
+}
+
+if [ $# -gt 0 ]
 then
     case $1 in
         -h | --help)
@@ -60,7 +106,7 @@ then
             verbose
             ;;
         *)
-            verbose
+            notverbose $@
             ;;
     esac
 fi
