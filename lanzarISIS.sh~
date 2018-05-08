@@ -24,7 +24,7 @@ function verbose {
         then
             echo "Ip introducida no válida"
         else
-	    echo "$ipmaquina\n" >> ips.txt
+	    echo "$ipMaquina" >> ips.txt
             echo "$((indice * 2 - 1));$ipMaquina;" >> servidores.conf
             echo "$((indice * 2 ));$ipMaquina;" >> servidores.conf
             maquinas[$indice]=$ipMaquina
@@ -62,9 +62,12 @@ function notverbose {
     indice=1
     rm -f servidores.conf
     touch servidores.conf
+    rm -f ips.txt
+    touch ips.txt
 
     for ipMaquina in $@
     do
+	echo "$ipMaquina" >> ips.txt
         echo "$((indice * 2 - 1));$ipMaquina;" >> servidores.conf
 	echo "$((indice * 2 ));$ipMaquina;" >> servidores.conf
 	maquinas[$indice]=$ipMaquina
@@ -112,14 +115,23 @@ then
 	-start)
 	    curl -X PUT "http://localhost:8080/SD_ISIS/dispatcher/start"	
 	    ;;
+	-results)
+	    curl -X GET "http://localhost:8080/SD_ISIS/dispatcher/comprobarResultados"	
+	    ;;
 	-rm)
-	    while read ip; do
-	  	ssh i0917867@$ip "cd ~/Documentos/trabajo_isis/TomcatServer/bin; 
-			  	  bash catalina.sh stop;
- 		          	  cd ~/Documentos;
-			  	  rm -f -R trabajo_isis"
-		echo "${p} cleared"
+	    maquinas=()
+	    indice=1
+	    while read ip
+	    do 
+		 maquinas[$indice]=$ip
+		 indice=$((indice + 1))
 	    done < ips.txt
+
+    	    for ip in ${maquinas[@]};
+            do
+		echo "$ip"
+		ssh i0917867@$ip "bash ~/Documentos/trabajo_isis/TomcatServer/bin/catalina.sh stop; rm -f -R ~/Documentos/trabajo_isis"        
+    	    done
 	    ;;
         *)
             notverbose $@
